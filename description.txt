@@ -1,0 +1,205 @@
+## 1. LavaaShop là dự án gì?
+
+LavaaShop là một **nền tảng e-commerce mã nguồn mở** viết bằng **PHP 8.x + Laravel 10/12**, hướng tới **bán hàng xuyên biên giới** (cross-border). Họ nhấn mạnh:
+
+- Hỗ trợ **đa ngôn ngữ, đa tiền tệ**, tích hợp thanh toán, logistics, quản lý thành viên.
+- Có **plugin marketplace**, kiến trúc **microkernel + modular**, dễ mở rộng.
+- Có **tích hợp ChatGPT / OpenAI**, và từ bản v2.0 có **AI smart customer service assistant + knowledge base** dạng plugin
+- Frontend: **Blade + Vue.js**, backend: Laravel MVC chuẩn.
+
+## 2. Các actor chính trong hệ thống
+
+Nếu phân tích dưới góc nhìn “đề tài khóa luận”, ta có thể coi LavaaShop có các nhóm actor sau:
+
+1. **Customer (khách mua hàng)**
+    - Vào store (frontend), duyệt sản phẩm, thêm vào giỏ, thanh toán, theo dõi đơn hàng, quản lý tài khoản.
+    - Sử dụng giao diện đa ngôn ngữ, đa tiền tệ, trải nghiệm mobile-friendly, giao diện drag & drop được admin cấu hình sẵn.
+    
+    **NÊN CODE (bắt buộc):**
+    
+    1. **Đăng ký / đăng nhập / đăng xuất**
+        - Đăng ký bằng email + mật khẩu.
+        - Đăng nhập, lưu session/JWT.
+    2. **Quản lý tài khoản đơn giản**
+        - Xem & sửa: tên, số điện thoại, địa chỉ giao hàng mặc định.
+    3. **Duyệt store & sản phẩm**
+        - Xem danh sách store (tên, logo, mô tả ngắn).
+        - Vào một store → xem danh sách sản phẩm của store đó.
+        - Xem chi tiết sản phẩm (tên, giá, mô tả, ảnh).
+    4. **Giỏ hàng & đặt đơn (theo từng store)**
+        - Thêm sản phẩm vào giỏ (giỏ gắn với *một* store; nếu chọn từ store khác thì bắt đầu giỏ mới hoặc báo).
+        - Xem giỏ hàng, chỉnh số lượng, xoá sản phẩm.
+        - Đặt đơn: xác nhận địa chỉ giao hàng, tổng tiền.
+        - Đơn tạo với trạng thái ban đầu `PENDING`.
+    5. **Theo dõi đơn hàng**
+        - Xem danh sách đơn của tôi (filter theo trạng thái).
+        - Xem chi tiết đơn (store, sản phẩm, tổng tiền, trạng thái).
+    6. **Chat với trợ lý AI (basic)**
+        - Một khung chat đơn giản:
+            - Gửi câu hỏi (vd: “Gợi ý laptop cho sinh viên tầm 15 triệu”).
+            - Nhận trả lời từ AI.
+    
+    **CẮT BỚT / ĐỂ TƯƠNG LAI:**
+    
+    - Thanh toán online (giữ “Thanh toán khi nhận hàng” / COD).
+    - Đánh giá sản phẩm, bình luận, wishlist.
+    - Đa ngôn ngữ, đa tiền tệ, voucher, flash sale.
+2. **Store Admin / Merchant (quản trị viên của từng shop)**
+    
+    **NÊN CODE:**
+    
+    1. **Đăng nhập Admin của store**
+        - Mỗi store có 1 account admin (hoặc nhiều, nhưng demo 1 là đủ).
+    2. **Quản lý thông tin store**
+        - Sửa: tên store, logo, mô tả, địa chỉ liên hệ.
+    3. **Quản lý sản phẩm**
+        - Xem danh sách sản phẩm của store mình.
+        - Thêm sản phẩm: tên, giá, mô tả, ảnh, trạng thái (còn bán / ẩn).
+        - Sửa / xóa sản phẩm.
+    4. **Quản lý đơn hàng của store**
+        - Xem danh sách đơn thuộc store mình (không xem được store khác).
+        - Xem chi tiết đơn.
+        - Cập nhật trạng thái:
+            - `PENDING` → `CONFIRMED` (đã nhận đơn).
+            - `CONFIRMED` → `SHIPPED`.
+            - `SHIPPED` → `COMPLETED`.
+            - Hoặc `PENDING` / `CONFIRMED` → `CANCELLED`.
+    5. **(Tuỳ chọn) Xem đơn theo trạng thái / ngày**
+        - Filter đơn theo trạng thái / ngày tạo.
+    
+    **CẮT BỚT / ĐỂ TƯƠNG LAI:**
+    
+    - Quản lý tồn kho chi tiết (nhiều kho, import file, v.v.).
+    - Quản lý khuyến mãi, voucher, combo sản phẩm.
+    - Dashboard phức tạp (doanh thu theo tháng, funnel, heatmap).
+    - Chat riêng giữa merchant và khách.
+3. **Platform / Super Admin (quản trị hệ thống LavaaShop đa site)**
+    
+    **NÊN CODE (MỨC CƠ BẢN):**
+    
+    1. **Đăng nhập Super Admin**
+        - 1 account mặc định, hard-code trong DB cũng được.
+    2. **Quản lý store**
+        - Xem danh sách store (id, tên, admin email, trạng thái).
+        - Tạo store mới:
+            - Nhập tên store, email admin → tự sinh tài khoản admin store.
+        - Khoá / mở store (status: ACTIVE / INACTIVE).
+            - Nếu store INACTIVE, khách không thấy store, admin store không login được (hoặc chỉ xem read-only).
+    3. **Quản lý user nếu cần**
+        - Xem danh sách tất cả user.
+        - Khoá user (nếu vi phạm) – optional.
+    4. **Dashboard đơn giản**
+        - Thống kê tổng số:
+            - Số store.
+            - Số khách.
+            - Số đơn theo trạng thái (PENDING / COMPLETED / …) – hiển thị chart nhỏ.
+    
+    **CẮT BỚT / ĐỂ TƯƠNG LAI:**
+    
+    - Quản lý license, domain riêng cho từng store.
+    - Phân quyền nhiều cấp trong Super Admin (marketing, vận hành, v.v.).
+    - Báo cáo phức tạp (funnel, conversion, nguồn traffic).
+4. **Plugin Developer (nhà phát triển plugin)**
+    
+    **GỢI Ý CÁCH ĐƠN GIẢN HOÁ:**
+    
+    - Thay vì làm **marketplace plugin**, bạn:
+        1. Thiết kế kiến trúc cho phép **đăng ký “extension”** cho 1 vài hook trong hệ thống (ví dụ: hook trước khi tạo đơn, hook hiển thị sidebar admin).
+        2. Cài sẵn **1–2 plugin demo** do *chính bạn* viết:
+            - Plugin “Gợi ý sản phẩm nổi bật ở sidebar admin”.
+            - Plugin “Thêm extra logging khi tạo đơn hàng”.
+    
+    **NÊN CODE (MỨC RẤT NHẸ):**
+    
+    - Ở mức code:
+        - Định nghĩa 1 cấu trúc “plugin” (ví dụ: 1 class implements interface, đăng ký trong config).
+        - Ở 1 điểm trong code, bạn gọi `PluginManager::trigger('after_order_created', $order)` → các plugin đăng ký hook đó sẽ nhận event.
+    - Không cần:
+        - UI cài plugin, bật/tắt plugin như WordPress.
+        - Marketplace plugin, update online.
+    
+    **CÓ THỂ CHỈ MÔ TẢ TRONG BÁO CÁO:**
+    
+    - Vai trò của plugin developer, cách họ có thể thêm plugin mới.
+    - Cho ví dụ cấu trúc folder/plugin, 1-2 dòng code minh hoạ.
+5. **AI Assistant / Chatbot (tác nhân hệ thống)**
+    
+    **NÊN CODE (BẢN ĐƠN GIẢN NHƯNG “NGẦU”):**
+    
+    1. **Giao diện chat cho Customer**
+        - Một button “Trợ lý AI” ở góc màn hình (global).
+        - Popup/khung chat (giống chat widget):
+            - Input text.
+            - Hiển thị history (user / bot).
+    2. **API backend tích hợp AI**
+        - Endpoint: `POST /api/ai/chat`
+            - Nhận: message người dùng.
+            - Gọi API OpenAI (hoặc AI provider khác).
+            - (Option khá hay): Lấy top 3 sản phẩm từ DB dựa trên từ khoá → nhúng vào prompt.
+        - Trả về: câu trả lời để render lên UI.
+    3. **Logic prompt cơ bản**
+        - Hướng dẫn AI:
+            - “Bạn là trợ lý tư vấn mua hàng cho website X. Hãy trả lời ngắn gọn, dễ hiểu, ưu tiên gợi ý sản phẩm phù hợp trong danh sách được cung cấp.”
+    
+    **CẮT BỚT / ĐỂ TƯƠNG LAI:**
+    
+    - Chat đa lượt có memory phức tạp (nhúng vector database, RAG…).
+    - Cho phép AI chỉnh sửa giỏ hàng / tạo đơn trực tiếp.
+    - Fine-tune model, huấn luyện riêng.
+
+## 3. Các nhóm chức năng lớn
+
+### 3.1. Front Store (khách mua hàng)
+
+Các chức năng nền tảng của một e-commerce:
+
+- **Trang chủ, danh mục, tìm kiếm sản phẩm**
+- **Trang chi tiết sản phẩm**, thêm vào giỏ, wishlist, so sánh (tùy cấu hình).
+- **Giỏ hàng, checkout**, chọn địa chỉ, phương thức thanh toán, shipping.
+- **Tài khoản khách hàng**: đăng ký, đăng nhập, quản lý profile, địa chỉ, xem lịch sử đơn hàng.
+- Hỗ trợ nhiều **ngôn ngữ và tiền tệ**, tuỳ theo cài đặt shop.
+
+### 3.2. Admin Panel (cho từng shop)
+
+Backend cho store admin có thể gồm:
+
+- **Quản lý sản phẩm & danh mục**
+    - Tạo/sửa/xoá sản phẩm, biến thể, thuộc tính, hình ảnh.
+    - Quản lý danh mục, thương hiệu, tag.
+- **Quản lý đơn hàng**
+    - Danh sách đơn, trạng thái (processing, shipped, completed, canceled…).
+    - Xem chi tiết, cập nhật trạng thái, in hóa đơn, gửi email.
+- **Quản lý khách hàng & thành viên**
+    - Danh sách khách hàng, phân loại, theo dõi hành vi mua.
+    - Quản lý cấp độ thành viên/loyalty (tùy plugin).
+- **Cài đặt thanh toán – vận chuyển – tiền tệ – ngôn ngữ**
+    - Cấu hình cổng thanh toán (Alipay, thẻ, coin…).
+    - Thiết lập phí ship, phương thức ship, vùng ship.
+    - Thiết lập multi-currency & rate, multi-language.
+- **Cài đặt giao diện**
+    - Chọn theme, chỉnh sửa trang thông qua **drag-and-drop visual builder**.
+- **Báo cáo & Dashboard**
+    - Theo dõi KPI: traffic, conversion funnel, doanh thu, đơn hàng, khách hàng.
+    - Bản v2.0 có thêm **Customer Data Dashboard** với funnel, traffic source…
+
+### 3.3. Multi-Site / Multi-Store quản lý tập trung
+
+Hệ thống còn có giải pháp **Multi-Site Management System**:
+
+- Tạo **nhiều store** độc lập (mỗi store có sản phẩm, đơn, ngôn ngữ, tiền tệ riêng).
+- Quản lý tất cả từ một **dashboard tập trung**: đơn, tồn kho, dữ liệu khách hàng.
+- Role-based permission cho team khác nhau (marketing, vận hành, v.v.).
+
+### 3.4. Plugin Marketplace & mở rộng
+
+- Kiến trúc microkernel + plugin: phần core gọn, chức năng mở rộng qua plugin
+- Có **plugin marketplace**: thanh toán (Alipay, crypto, v.v.), ngôn ngữ, AI assistant, B2B/B2B2C, v.v.
+- Dev có thể viết plugin mới, đăng lên marketplace để bán/cho free.
+
+### 3.5. AI & ChatGPT integration
+
+LavaaShop không phải “AI-first” mà là **e-commerce có AI plugin**:
+
+- Repo và topic mô tả rõ: “integrates ChatGPT OpenAI”.
+- Bản v2.0 thêm plugin **AI Smart Customer Service Assistant + Knowledge Base**:
+    - Chatbot trả lời câu hỏi khách dựa trên base kiến thức của shop.
