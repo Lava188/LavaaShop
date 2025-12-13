@@ -6,13 +6,13 @@ use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class EnsureUserIsSuperAdmin
+class EnsureUserIsStoreAdmin
 {
     public function handle(Request $request, Closure $next): Response
     {
         $user = $request->user();
 
-        if (!$user || $user->role !== 'super_admin') {
+        if (!$user || $user->role !== 'store_admin') {
             abort(403, 'Unauthorized');
         }
 
